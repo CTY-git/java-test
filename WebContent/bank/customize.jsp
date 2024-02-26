@@ -22,6 +22,7 @@ IBM AltoroJ
 %> 
     
 <%@page import="com.ibm.security.appscan.altoromutual.util.ServletUtil" %>
+<%@page import="org.apache.commons.text.StringEscapeUtils" %>
 <jsp:include page="/header.jspf"/>
 
 <div id="wrapper" style="width: 99%;">
@@ -33,16 +34,23 @@ IBM AltoroJ
 			String content = request.getParameter("content");
 			if (content != null && !content.equalsIgnoreCase("customize.jsp")){
 				if (content.startsWith("http://") || content.startsWith("https://")){
-					response.sendRedirect(content);
+					// Validate against open redirect vulnerability
+					String allowedDomain = "example.com"; // Replace with the domain you want to allow
+					URL url = new URL(content);
+					if (url.getHost().endsWith(allowedDomain)) {
+						response.sendRedirect(content);
+					} else {
+						response.sendRedirect("/error.jsp"); // Redirect to an error page or the home page
+					}
 				}
 			}
 		%>
-		<script><%=(request.getParameter("lang")==null)?"":ServletUtil.addUnVulnerableName(request.getParameter("lang"))%></script>
+		<script><%=(request.getParameter("lang")==null)?"":StringEscapeUtils.escapeEcmaScript(ServletUtil.filterString(request.getParameter("lang")))%></script>
 		<h1>Customize Site Language</h1>
 		
 		<form method="post">
 		  <p>
-		  Current Language: <%=(request.getParameter("lang")==null)?"":request.getParameter("lang")%>
+		  Current Language: <%=(request.getParameter("lang")==null)?"":StringEscapeUtils.escapeHtml4(request.getParameter("lang"))%>
 		  </p>
 		
 		  <p>
